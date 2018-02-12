@@ -14,14 +14,13 @@ static const unsigned int BIT_PER_PIXEL = 32;
 /* Nombre minimal de millisecondes separant le rendu de deux images */
 static const Uint32 FRAMERATE_MILLISECONDS = 1000 / 60;
 
-void windowResize(int height, int width){
-    WINDOW_WIDTH=width;
-    WINDOW_HEIGHT=height;
+void windowResize(){
     printf("Globales: h:%d, w:%d\n",WINDOW_HEIGHT,WINDOW_WIDTH );
-    glViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
+    glViewport(0,0,WINDOW_HEIGHT,WINDOW_WIDTH);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(-1.,1.,-1.,1.);
+    gluOrtho2D(-1.0,1.0,-1.0,1.0);
+    SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, BIT_PER_PIXEL, SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_RESIZABLE);
 }
 
 int main(int argc, char** argv) {
@@ -53,7 +52,7 @@ int main(int argc, char** argv) {
         
         /* Echange du front et du back buffer : mise à jour de la fenêtre */
         SDL_GL_SwapBuffers();
-        glClear(GL_COLOR_BUFFER_BIT);
+        //glClear(GL_COLOR_BUFFER_BIT);
         
         /* Boucle traitant les evenements */
         SDL_Event e;
@@ -71,17 +70,21 @@ int main(int argc, char** argv) {
                 /* Clic souris */
                 case SDL_MOUSEBUTTONUP:
                     printf("clic en (%d, %d)\n", e.button.x, e.button.y);
-                    r=e.button.x%255;
+                    /*r=e.button.x%255;
                     v=e.button.y%255;
-                    glClearColor(r/255,v/255,0,1);
+                    glClearColor(r/255,v/255,0,1);*/
+                    glColor3ub(255,255,255);
+                    glBegin(GL_POINTS);
+                    	glVertex2f(-1+2.*e.button.x/WINDOW_WIDTH,-(-1+2.*e.button.y/WINDOW_HEIGHT));
+                    glEnd();
                     break;
 
                 /* Mouvement souris */
                 case SDL_MOUSEMOTION:
                     //printf("Mouse at (%d,%d)\n",e.motion.x, e.motion.y );
-                    r=e.motion.x%255;
+                    /*r=e.motion.x%255;
                     v=e.motion.y%255;
-                    glClearColor(r/255,v/255,0,1);
+                    glClearColor(r/255,v/255,0,1);*/
                     break;
 
                 /* Touche clavier */
@@ -99,8 +102,9 @@ int main(int argc, char** argv) {
                 /* Redimentionnement de la fenetre */
                 case SDL_VIDEORESIZE:
                     printf("window resize\n");
-                    printf("Nouvelle taille: h:%d, w:%d\n",e.resize.h,e.resize.w);
-                    windowResize(e.resize.h,e.resize.w);
+                    WINDOW_HEIGHT=e.resize.h;
+                    WINDOW_WIDTH=e.resize.w;
+                    windowResize();
                     break;
 
                 default:
