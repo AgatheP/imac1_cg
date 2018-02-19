@@ -193,7 +193,14 @@ void drawCircle(PrimitiveList* list){
     unsigned int b=255;
     int i=0;
     Primitive* cercle=allocPrimitive(GL_LINE_LOOP);
+    /*
+        diviser le cercle en angle
+        trouver le X et y de chaque angle
+        ajouter les points
+    */
     for (int i = 0; i < CIRCLE_SEG; ++i){
+
+        //angle = 2pi/CIRCLE_SEG *i
         
     }
 
