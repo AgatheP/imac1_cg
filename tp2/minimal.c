@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
 
 /* Dimensions de la fenêtre */
 static unsigned int WINDOW_WIDTH = 800;
@@ -188,20 +189,17 @@ void drawLandmark(PrimitiveList* list){
 }
 
 void drawCircle(PrimitiveList* list){
-    unsigned int r=0;
-    unsigned int g=0;
+    unsigned int r=255;
+    unsigned int g=255;
     unsigned int b=255;
+    float angle;
+    float pi=3.1415;
     int i=0;
     Primitive* cercle=allocPrimitive(GL_LINE_LOOP);
-    /*
-        diviser le cercle en angle
-        trouver le X et y de chaque angle
-        ajouter les points
-    */
-    for (int i = 0; i < CIRCLE_SEG; ++i){
-
-        //angle = 2pi/CIRCLE_SEG *i
-        
+    for(i = 1; i <= CIRCLE_SEG; ++i){
+        angle=((2*pi)/CIRCLE_SEG)*i;
+        printf("point en X:%f Y:%f\n",cos(angle),sin(angle));
+        addPointToList(allocPoint(cos(angle),sin(angle),r,g,b),&cercle->points);
     }
 
 }
@@ -334,6 +332,10 @@ int main(int argc, char** argv) {
                         case SDLK_m:
                             printf("Draw landmark\n");
                             drawLandmark(&primitives);
+                            break;
+                        case SDLK_e:
+                            printf("drawCircle\n");
+                            drawCircle(&primitives);
                             break;
                         case SDLK_c:
                             /* Touche pour effacer le dessin */
