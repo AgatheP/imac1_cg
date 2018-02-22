@@ -8,8 +8,8 @@
 
 /* Dimensions de la fenêtre */
 static unsigned int WINDOW_WIDTH = 800;
-static unsigned int WINDOW_HEIGHT = 800;
-static unsigned int CIRCLE_SEG =10;
+static unsigned int WINDOW_HEIGHT = 600;
+static unsigned int CIRCLE_SEG =20;
 
 /* Nombre de bits par pixel de la fenêtre */
 static const unsigned int BIT_PER_PIXEL = 32;
@@ -126,21 +126,24 @@ void resizeViewport() {
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(-1., 1., -1., 1.);
+    gluOrtho2D(-4.0, 4.0, -3.0, 3.0);
     SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, BIT_PER_PIXEL, SDL_OPENGL | SDL_RESIZABLE);
 }
 
 
 static const unsigned char COLORS[] = {
-    255, 255, 255,
-    0, 0, 0,
-    255, 0, 0,
-    0, 255, 0,
-    0, 0, 255,
-    255, 255, 0,
-    0, 255, 255,
-    255, 0, 255
+    255, 255, 255, //0 =blanc
+    0, 0, 0, //1=noir
+    255, 0, 0, //2=rouge
+    0, 255, 0, // 3 =vert
+    0, 0, 255, //4= bleu
+    255, 255, 0, //5=jaune
+    0, 255, 255, // 6=cyan
+    255, 0, 255, // 7=majenta
+    237, 127,16, // 8=orange
+    102, 0, 153 //9=violet
 };
+unsigned int CURRENTCOLOR;
 
 static const unsigned int NB_COLORS = sizeof(COLORS) / (3 * sizeof(unsigned char));
 
@@ -158,21 +161,31 @@ void drawColorPalette() {
     glEnd();
 }
 
-void drawSquare(PrimitiveList* list){
-    unsigned int r=255;
-    unsigned int g=255;
-    unsigned int b=255;
-    Primitive* t1=allocPrimitive(GL_TRIANGLES);
-    addPointToList(allocPoint(-0.5,-0.5, r, g, b), &t1->points);
-    addPointToList(allocPoint(0.5,-0.5, r, g, b), &t1->points);
-    addPointToList(allocPoint(0.5,0.5, r, g, b), &t1->points);
-    addPrimitive(t1,list);
-
-    Primitive * t2=allocPrimitive(GL_TRIANGLES);
-    addPointToList(allocPoint(-0.5,0.5,r,g,b),&t2->points);
-    addPointToList(allocPoint(-0.5,-0.5,r,g,b),&t2->points);
-    addPointToList(allocPoint(0.5,0.5,r,g,b),&t2->points);
-    addPrimitive(t2,list);
+Primitive* drawSquare(PrimitiveList* list, int full){
+	printf("SQUARE: full=%d\n", full);
+    unsigned int r = COLORS[CURRENTCOLOR * 3];
+    unsigned int g = COLORS[CURRENTCOLOR * 3 + 1];
+    unsigned int b = COLORS[CURRENTCOLOR * 3 + 2];
+    Primitive* p;
+    if(full){
+    	p=allocPrimitive(GL_QUADS);
+    	glBegin(GL_QUADS);
+    }else{
+    	p=allocPrimitive(GL_LINE_LOOP);
+    	glBegin(GL_LINE_LOOP);
+    }
+    glColor3ub(r,g,b);
+    glVertex2f(-0.5,0.5);
+    addPointToList(allocPoint(-0.5,0.5, r, g, b), &p->points);
+    glVertex2f(0.5,0.5);
+    addPointToList(allocPoint(0.5,0.5, r, g, b), &p->points);
+    glVertex2f(0.5,-0.5);
+    addPointToList(allocPoint(0.5,-0.5, r, g, b), &p->points);
+    glVertex2f(-0.5,-0.5);
+    addPointToList(allocPoint(-0.5,-0.5, r, g, b), &p->points);
+    addPrimitive(p,list);
+    glEnd();
+    return p;
 }
 
 void drawLandmark(PrimitiveList* list){
@@ -188,20 +201,31 @@ void drawLandmark(PrimitiveList* list){
     addPrimitive(ay,list);
 }
 
-void drawCircle(PrimitiveList* list){
-    unsigned int r=255;
-    unsigned int g=255;
-    unsigned int b=255;
+void drawCircle(PrimitiveList* list, int full){
+    unsigned int r = COLORS[CURRENTCOLOR * 3];
+    unsigned int g = COLORS[CURRENTCOLOR * 3 + 1];
+    unsigned int b = COLORS[CURRENTCOLOR * 3 + 2];
     float angle;
     float pi=3.1415;
-    int i=0;
-    Primitive* cercle=allocPrimitive(GL_LINE_LOOP);
+    int i;
+    Primitive* cercle;
+    if(full){
+    	cercle=allocPrimitive(GL_POLYGON);
+    	glBegin(GL_POLYGON);
+    }else{
+    	cercle=allocPrimitive(GL_LINE_LOOP);
+    	glBegin(GL_LINE_LOOP);
+    }
     for(i = 1; i <= CIRCLE_SEG; ++i){
         angle=((2*pi)/CIRCLE_SEG)*i;
-        printf("point en X:%f Y:%f\n",cos(angle),sin(angle));
-        addPointToList(allocPoint(cos(angle),sin(angle),r,g,b),&cercle->points);
+        //printf("point en X:%f Y:%f\n",cos(angle),sin(angle));
+        Point* p =allocPoint(cos(angle),sin(angle),r,g,b);
+        glColor3ub(r,g,b);
+        glVertex2f(cos(angle),sin(angle));
+        addPointToList(p,&cercle->points);
     }
-
+    addPrimitive(cercle,list);
+    glEnd();
 }
 
 int main(int argc, char** argv) {
@@ -218,6 +242,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
     SDL_WM_SetCaption("Paint IMAC", NULL);
+    resizeViewport();
 
     glClearColor(0.1, 0.1, 0.1, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -230,9 +255,11 @@ int main(int argc, char** argv) {
 
     int loop = 1;
     int mode = 0; // le mode d'affichage. 0 = le dessin, 1 = la palette
-    unsigned int currentColor = 0; // l'index de la couleur courante dans le tableau COLORS
+    CURRENTCOLOR = 0; // l'index de la couleur courante dans le tableau COLORS
     GLenum currentPrimitiveType = GL_POINTS;
+    Primitive* Ys=NULL; //yellow square
 
+    printf("POUR L'EXERCICE 3:\n le glClear et drawPrimitives on été désactivé pour dessiner les primitive une à une.\n");
     /* Boucle d'affichage */
     while(loop) {
 
@@ -240,11 +267,11 @@ int main(int argc, char** argv) {
         Uint32 startTime = SDL_GetTicks();
         
         /* Code de dessin */
-
-        glClear(GL_COLOR_BUFFER_BIT); // Toujours commencer par clear le buffer
+        
+        //glClear(GL_COLOR_BUFFER_BIT); // Toujours commencer par clear le buffer
 
         if (mode == 0) {
-            drawPrimitives(primitives); // On dessine la liste de primitives
+            //drawPrimitives(primitives); // On dessine la liste de primitives
         }
         else if (mode == 1) {
             drawColorPalette();
@@ -269,9 +296,9 @@ int main(int argc, char** argv) {
                         printf("Clique droit.\n");
                         float x = -1 + 2. * e.button.x / WINDOW_WIDTH;
                         float y = -(-1 + 2. * e.button.y / WINDOW_HEIGHT);
-                        unsigned int r = COLORS[currentColor * 3];
-                        unsigned int g = COLORS[currentColor * 3 + 1];
-                        unsigned int b = COLORS[currentColor * 3 + 2];
+                        unsigned int r = COLORS[CURRENTCOLOR * 3];
+                        unsigned int g = COLORS[CURRENTCOLOR * 3 + 1];
+                        unsigned int b = COLORS[CURRENTCOLOR * 3 + 2];
                         addPointToList(allocPoint(x, y, r, g, b), &lastPrim->points);
                         lastPrim->primitiveType=GL_LINE_LOOP;
 
@@ -280,20 +307,24 @@ int main(int argc, char** argv) {
                         lastPrim = prim;
                         addPrimitive(prim, &primitives);
                         currentPrimitiveType = GL_LINE_STRIP;
-                        break;
+
+                        //bouger le carré jaune
+                        if(Ys!=NULL){
+                        	printf("Il y a un carré jaune dans la fenetre.\n");
+                        }
                     }
                     if (mode == 1) {
                         /* On retrouve automatiquement l'index de la couleur cliquée en connaissant la taille de notre tableau */
-                        currentColor = e.button.x * NB_COLORS / WINDOW_WIDTH;
+                        CURRENTCOLOR = e.button.x * NB_COLORS / WINDOW_WIDTH;
                     }
                     else if (mode == 0) {
                         /* Transformation des coordonnées du clic souris en coordonnées OpenGL */
                         float x = -1 + 2. * e.button.x / WINDOW_WIDTH;
                         float y = -(-1 + 2. * e.button.y / WINDOW_HEIGHT);
                         /* On retrouve la couleur courante grace à son index */
-                        unsigned int r = COLORS[currentColor * 3];
-                        unsigned int g = COLORS[currentColor * 3 + 1];
-                        unsigned int b = COLORS[currentColor * 3 + 2];
+                        unsigned int r = COLORS[CURRENTCOLOR * 3];
+                        unsigned int g = COLORS[CURRENTCOLOR * 3 + 1];
+                        unsigned int b = COLORS[CURRENTCOLOR * 3 + 2];
                         /* On ajoute un nouveau point à la liste de la primitive courante */
                         addPointToList(allocPoint(x, y, r, g, b), &lastPrim->points);
                     }
@@ -311,12 +342,34 @@ int main(int argc, char** argv) {
                     GLenum newPrimitiveType;
 
                     switch(e.key.keysym.sym) {
+                    	case SDLK_d:
+                    		printf("DESSINER LES FORMES\n");
+                    		printf("Cercle orange\n");
+                    		CURRENTCOLOR=8;
+                    		drawCircle(&primitives,1);
+                    		resizeViewport(); //pour réinitialiser la matrice
+
+                    		printf("Carré rouge\n");
+                    		CURRENTCOLOR=2;
+                    		glRotatef(45.0,0.0,0.0,1.0);
+                    		glTranslatef(2,0,0);
+                    		drawSquare(&primitives,1);
+                    		resizeViewport();
+
+                    		printf("Carré violet\n (La translation se fait sur le repère donc sur le carré)\n");
+                    		CURRENTCOLOR=9;
+                    		glTranslatef(2,0,0);
+                    		glRotatef(45.0,0.0,0.0,1.0);
+                    		drawSquare(&primitives,1);
+                    		resizeViewport();
+
+                    		printf("Carré jaune\n");
+                    		CURRENTCOLOR=5;
+                    		drawSquare(&primitives,1);
+                    		break;
 
                         case SDLK_q:
                             loop = 0;
-
-                        case SDLK_SPACE:
-                            mode = 1;
                             break;
 
                         case SDLK_l:
@@ -327,7 +380,7 @@ int main(int argc, char** argv) {
 
                         case SDLK_s:
                             printf("Draw square!\n");
-                            drawSquare(&primitives);
+                            drawSquare(&primitives, 0);
                             break;
                         case SDLK_m:
                             printf("Draw landmark\n");
@@ -335,7 +388,7 @@ int main(int argc, char** argv) {
                             break;
                         case SDLK_e:
                             printf("drawCircle\n");
-                            drawCircle(&primitives);
+                            drawCircle(&primitives, 0);
                             break;
                         case SDLK_c:
                             /* Touche pour effacer le dessin */
