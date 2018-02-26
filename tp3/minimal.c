@@ -36,7 +36,8 @@ void resizeViewport() {
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(-80.0, 80.0, -60.0, 60.0);
+    int zoom=17;
+    gluOrtho2D(-8*zoom, 8*zoom, -6*zoom, 6*zoom);
     SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, BIT_PER_PIXEL, SDL_OPENGL | SDL_RESIZABLE);
 }
 
@@ -245,7 +246,6 @@ void drawFirstArm(){
     PrimitiveList plist=NULL;
     //PrimitiveList plist2=NULL;
     //drawLandmark(&plist2);
-    CURRENTCOLOR=4;
     //carré central
     unsigned int r = COLORS[CURRENTCOLOR * 3];
     unsigned int g = COLORS[CURRENTCOLOR * 3 + 1];
@@ -257,7 +257,7 @@ void drawFirstArm(){
     glVertex2f(60,-10);
     glVertex2f(0,-20);
     glEnd();
-    CURRENTCOLOR=3;
+    //CURRENTCOLOR=3;
     //grand CERCLE
     glPushMatrix();
         glScalef(20.0,20.0,0);
@@ -274,6 +274,47 @@ void drawFirstArm(){
 }
 
 void drawSecondArm(){
+    Primitive* list=NULL;
+    //premier carré
+    glPushMatrix();
+        glScalef(10.0,10.0,0);
+        drawRoundedSquare();
+    glPopMatrix();
+    //carré 2
+    glPushMatrix();
+        glTranslatef(44.5,0,0);
+        glScalef(10.0,10.0,1);
+        drawRoundedSquare();
+    glPopMatrix();
+    //rectangle
+    glPushMatrix();
+        glTranslatef(21.5,0,0);
+        glScalef(46,6,0);
+        //drawLandmark(&list);
+        drawSquare(&list,1);
+        //drawPrimitives(list);
+    glPopMatrix();
+}
+
+void drawThirdArm(){
+    Primitive* list=NULL;
+    //carré
+    glPushMatrix();
+        glScalef(6.0,6.0,1);
+        drawRoundedSquare();
+    glPopMatrix();
+    //rectangle
+    glPushMatrix();
+        glScalef(40,4,1);
+        glTranslatef(0.46,0,0);
+        drawSquare(&list,1);
+    glPopMatrix();
+    //cercle
+    glPushMatrix();
+        glTranslatef(37,0,0);
+        glScalef(4,4,0);
+        drawCircle(&list,1);
+    glPopMatrix();
 
 }
 /***************************************************************** Autre fonctions */
@@ -311,6 +352,10 @@ int main(int argc, char** argv) {
     CURRENTCOLOR = 0; // l'index de la couleur courante dans le tableau COLORS
     GLenum currentPrimitiveType = GL_POINTS;
 
+    float alpha=40;
+    float beta=-10;
+    float gamma=35;
+
     while(loop){
         /* Récupération du temps au début de la boucle */
         Uint32 startTime = SDL_GetTicks();
@@ -318,9 +363,36 @@ int main(int argc, char** argv) {
         /* Code de dessin */
         glClear(GL_COLOR_BUFFER_BIT);
         drawPrimitives(primitives);
-        //drawRoundedSquare();
-        drawFirstArm();
-        drawSecondArm();
+        //dessin des bras
+        alpha=(int)(alpha+1)%360;
+        beta=(int)(beta+1)%360;
+        gamma=(int)(gamma+1)%360;
+        glPushMatrix();
+            CURRENTCOLOR = 3;
+            glRotatef(alpha,0.0,0.0,1.0);
+            drawFirstArm();
+            CURRENTCOLOR = 4;
+            glTranslatef(60,0,0);
+            glRotatef(beta,0.0,0.0,1.0);
+            drawSecondArm();
+
+            glTranslatef(45,0,0);
+            glPushMatrix();
+                CURRENTCOLOR = 5;
+                glRotatef(gamma,0.0,0.0,1.0);
+                drawThirdArm();
+            glPopMatrix();
+            glPushMatrix();
+                CURRENTCOLOR = 6;
+                glRotatef((int)(gamma+alpha)%360,0.0,0.0,1.0);
+                drawThirdArm();
+            glPopMatrix();
+
+            glScalef(10,10,1);
+            drawLandmark(&primitives);
+            drawPrimitives(primitives);
+        glPopMatrix();
+        
 
         /* Traitement des events*/
         SDL_Event e;
