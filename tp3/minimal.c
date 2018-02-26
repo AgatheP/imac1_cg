@@ -315,7 +315,87 @@ void drawThirdArm(){
         glScalef(4,4,0);
         drawCircle(&list,1);
     glPopMatrix();
+}
 
+GLuint createFirstArmIDList(){
+    GLuint id=glGenLists(1);
+    glNewList(id,GL_COMPILE);
+    PrimitiveList plist=NULL;
+    //grand CERCLE
+    glPushMatrix();
+        glScalef(20.0,20.0,0);
+        drawCircle(&plist,0);
+    glPopMatrix();
+    //petit cercle CERCLE
+    glPushMatrix();
+        glTranslatef(60,0,0);
+        glScalef(10.0,10.0,0);
+        drawCircle(&plist,0);
+    glPopMatrix();
+    unsigned int r = COLORS[CURRENTCOLOR * 3];
+    unsigned int g = COLORS[CURRENTCOLOR * 3 + 1];
+    unsigned int b = COLORS[CURRENTCOLOR * 3 + 2];
+    glBegin(GL_POLYGON);
+    glColor3ub(r,g,b);
+    glVertex2f(0,20);
+    glVertex2f(60,10);
+    glVertex2f(60,-10);
+    glVertex2f(0,-20);
+    glEnd();
+    glEndList();
+    return id;
+}
+
+GLuint creatSecondArmIDList(){
+    GLuint id=glGenLists(1);
+    glNewList(id,GL_COMPILE);
+    Primitive* list=NULL;
+    //premier carré
+    glPushMatrix();
+        glScalef(10.0,10.0,0);
+        drawRoundedSquare();
+    glPopMatrix();
+    //carré 2
+    glPushMatrix();
+        glTranslatef(44.5,0,0);
+        glScalef(10.0,10.0,1);
+        drawRoundedSquare();
+    glPopMatrix();
+    //rectangle
+    glPushMatrix();
+        glTranslatef(21.5,0,0);
+        glScalef(46,6,0);
+        //drawLandmark(&list);
+        drawSquare(&list,1);
+        //drawPrimitives(list);
+    glPopMatrix();
+    glEndList();
+    return id;
+}
+
+GLuint createThirdArmIDList(){
+    GLuint id=glGenLists(1);
+    glNewList(id,GL_COMPILE);
+    Primitive* list=NULL;
+    //carré
+    glPushMatrix();
+        glScalef(6.0,6.0,1);
+        drawRoundedSquare();
+    glPopMatrix();
+    //rectangle
+    glPushMatrix();
+        glScalef(40,4,1);
+        glTranslatef(0.46,0,0);
+        drawSquare(&list,1);
+    glPopMatrix();
+    //cercle
+    glPushMatrix();
+        glTranslatef(37,0,0);
+        glScalef(4,4,0);
+        drawCircle(&list,1);
+    glPopMatrix();
+    glEndList();
+    return id;
 }
 /***************************************************************** Autre fonctions */
 
@@ -370,22 +450,22 @@ int main(int argc, char** argv) {
         glPushMatrix();
             CURRENTCOLOR = 3;
             glRotatef(alpha,0.0,0.0,1.0);
-            drawFirstArm();
+            glCallList(createFirstArmIDList());
             CURRENTCOLOR = 4;
             glTranslatef(60,0,0);
             glRotatef(beta,0.0,0.0,1.0);
-            drawSecondArm();
+            glCallList(creatSecondArmIDList());
 
             glTranslatef(45,0,0);
             glPushMatrix();
                 CURRENTCOLOR = 5;
                 glRotatef(gamma,0.0,0.0,1.0);
-                drawThirdArm();
+                glCallList(createThirdArmIDList());
             glPopMatrix();
             glPushMatrix();
                 CURRENTCOLOR = 6;
                 glRotatef((int)(gamma+alpha)%360,0.0,0.0,1.0);
-                drawThirdArm();
+                glCallList(createThirdArmIDList());
             glPopMatrix();
 
             glScalef(10,10,1);
